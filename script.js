@@ -5,37 +5,44 @@ const clearButton = document.querySelector("#clear");
 const filter = document.querySelector(".filter");
 
 function renderItems() {
-  for (var i = 0; i < localStorage.length; i++) {
-    var key = localStorage.key(i);
-    var value = localStorage.getItem(key);
-    addItemFromLocalStorage(value);
-  }
-  checkUI();
+  const items = JSON.parse(localStorage.getItem("items"));
+  items.forEach((item) => addItem(item));
 }
 
-function addItemFromLocalStorage(name) {
+function addItemToLocalStorage(item) {
+  let itemsFromLocalStorage;
+  if (localStorage.getItem("items") === null) {
+    itemsFromLocalStorage = [];
+  } else {
+    itemsFromLocalStorage = JSON.parse(localStorage.getItem("items"));
+  }
+  itemsFromLocalStorage.push(item);
+  localStorage.setItem("items", JSON.stringify(itemsFromLocalStorage));
+}
+
+function removeItemFromLocalStorage(name) {
+  const itemsFromLocalStorage = JSON.parse(localStorage.getItem("items")).filter((item) => item !== name);
+  localStorage.setItem("items", JSON.stringify(itemsFromLocalStorage));
+}
+
+function onSubmitItem(e) {
+  e.preventDefault();
+  input = itemInput.value;
+  if (input != "") {
+    addItemToLocalStorage(input);
+    addItem(input);
+    itemInput.value = "";
+    checkUI();
+  }
+}
+
+function addItem(name) {
   const li = document.createElement("li");
   li.appendChild(document.createTextNode(name));
   const btn = createBtn("remove-item btn-link text-red");
   btn.appendChild(createIcon("fa-solid fa-xmark"));
   li.appendChild(btn);
   itemList.appendChild(li);
-}
-
-function addItem(e) {
-  e.preventDefault();
-  input = itemInput.value;
-  if (input != "") {
-    const li = document.createElement("li");
-    li.appendChild(document.createTextNode(input));
-    const btn = createBtn("remove-item btn-link text-red");
-    btn.appendChild(createIcon("fa-solid fa-xmark"));
-    li.appendChild(btn);
-    itemList.appendChild(li);
-    localStorage.setItem(input, input);
-    itemInput.value = "";
-    checkUI();
-  }
 }
 
 function createBtn(classes) {
@@ -53,10 +60,7 @@ function createIcon(classes) {
 function deleteItem(e) {
   if (e.target.parentElement.classList.contains("remove-item")) {
     if (confirm("Are you sure you want to delete this item?")) {
-      localStorage.removeItem(
-        e.target.parentElement.parentElement.textContent,
-        e.target.parentElement.parentElement.textContent
-      );
+      removeItemFromLocalStorage(e.target.parentElement.parentElement.textContent);
       e.target.parentElement.parentElement.remove();
     }
   }
@@ -94,7 +98,7 @@ function checkUI() {
   }
 }
 
-itemForm.addEventListener("submit", addItem);
+itemForm.addEventListener("submit", onSubmitItem);
 itemList.addEventListener("click", deleteItem);
 clearButton.addEventListener("click", clearAll);
 filter.addEventListener("input", filterItems);
