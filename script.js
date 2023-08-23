@@ -3,6 +3,9 @@ const itemInput = document.querySelector("#item-input");
 const itemList = document.querySelector("#item-list");
 const clearButton = document.querySelector("#clear");
 const filter = document.querySelector(".filter");
+const submitButton = document.querySelector(".btn");
+let isEditMode = false;
+let prevValue;
 
 function renderItems() {
   const items = JSON.parse(localStorage.getItem("items"));
@@ -28,6 +31,12 @@ function removeItemFromLocalStorage(name) {
 function onSubmitItem(e) {
   e.preventDefault();
   input = itemInput.value;
+  if (isEditMode) {
+    const itemToEdit = itemList.querySelector(".item-edit");
+    console.log(itemToEdit);
+    removeItemFromLocalStorage(itemToEdit.textContent);
+    itemToEdit.remove();
+  }
   if (input != "") {
     addItemToLocalStorage(input);
     addItem(input);
@@ -62,9 +71,11 @@ function deleteItem(e) {
     if (confirm("Are you sure you want to delete this item?")) {
       removeItemFromLocalStorage(e.target.parentElement.parentElement.textContent);
       e.target.parentElement.parentElement.remove();
+      checkUI();
     }
+  } else {
+    editItem(e.target);
   }
-  checkUI();
 }
 
 function clearAll() {
@@ -87,6 +98,15 @@ function filterItems(e) {
   });
 }
 
+function editItem(item) {
+  isEditMode = true;
+  itemList.querySelectorAll("li").forEach((item) => item.classList.remove("item-edit"));
+  item.classList.add("item-edit");
+  submitButton.innerHTML = '<i class="fa-solid fa-pen"></i>Edit';
+  submitButton.classList.add("btn-edit-mode");
+  itemInput.value = item.textContent;
+}
+
 function checkUI() {
   const items = itemList.querySelectorAll("li");
   if (items.length === 0) {
@@ -96,6 +116,9 @@ function checkUI() {
     clearButton.style.display = "block";
     filter.style.display = "block";
   }
+  isEditMode = false;
+  submitButton.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
+  submitButton.classList.remove("btn-edit-mode");
 }
 
 itemForm.addEventListener("submit", onSubmitItem);
