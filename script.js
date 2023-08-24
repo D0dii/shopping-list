@@ -5,11 +5,15 @@ const clearButton = document.querySelector("#clear");
 const filter = document.querySelector(".filter");
 const submitButton = document.querySelector(".btn");
 let isEditMode = false;
-let prevValue;
 
 function renderItems() {
-  const items = JSON.parse(localStorage.getItem("items"));
-  items.forEach((item) => addItem(item));
+  let itemsFromLocalStorage;
+  if (localStorage.getItem("items") === null) {
+    itemsFromLocalStorage = [];
+  } else {
+    itemsFromLocalStorage = JSON.parse(localStorage.getItem("items"));
+  }
+  itemsFromLocalStorage.forEach((item) => addItem(item));
 }
 
 function addItemToLocalStorage(item) {
@@ -32,10 +36,22 @@ function onSubmitItem(e) {
   e.preventDefault();
   input = itemInput.value;
   if (isEditMode) {
-    const itemToEdit = itemList.querySelector(".item-edit");
-    console.log(itemToEdit);
-    removeItemFromLocalStorage(itemToEdit.textContent);
-    itemToEdit.remove();
+    if (!checkIfUnique(input)) {
+      const itemToEdit = itemList.querySelector(".item-edit");
+      removeItemFromLocalStorage(itemToEdit.textContent);
+      itemToEdit.remove();
+    } else {
+      alert("This item is already in list");
+      itemInput.value = "";
+      checkUI();
+      return;
+    }
+  } else {
+    if (checkIfUnique(input)) {
+      alert("This item is already in list");
+      itemInput.value = "";
+      return;
+    }
   }
   if (input != "") {
     addItemToLocalStorage(input);
@@ -79,11 +95,13 @@ function deleteItem(e) {
 }
 
 function clearAll() {
-  while (itemList.firstChild) {
-    itemList.firstChild.remove();
+  if (confirm("Are you sure you want to delete all items?")) {
+    while (itemList.firstChild) {
+      itemList.firstChild.remove();
+    }
+    localStorage.removeItem("items");
+    checkUI();
   }
-  localStorage.clear();
-  checkUI();
 }
 
 function filterItems(e) {
@@ -96,6 +114,11 @@ function filterItems(e) {
       item.style.display = "none";
     }
   });
+}
+
+function checkIfUnique(item) {
+  const items = JSON.parse(localStorage.getItem("items"));
+  return items.includes(item);
 }
 
 function editItem(item) {
@@ -119,6 +142,7 @@ function checkUI() {
   isEditMode = false;
   submitButton.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
   submitButton.classList.remove("btn-edit-mode");
+  itemList.querySelectorAll("li").forEach((item) => item.classList.remove("item-edit"));
 }
 
 itemForm.addEventListener("submit", onSubmitItem);
