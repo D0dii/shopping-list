@@ -118,7 +118,7 @@ function filterItems(e) {
 
 function checkIfUnique(item) {
   const items = JSON.parse(localStorage.getItem("items"));
-  return items.includes(item);
+  return items ? items.includes(item) : false;
 }
 
 function editItem(item) {
