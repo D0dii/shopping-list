@@ -6,6 +6,7 @@ const filter = document.querySelector(".filter");
 const submitButton = document.querySelector(".btn");
 let isEditMode = false;
 
+//On start functions
 function renderItems() {
   let itemsFromLocalStorage;
   if (localStorage.getItem("items") === null) {
@@ -13,9 +14,11 @@ function renderItems() {
   } else {
     itemsFromLocalStorage = JSON.parse(localStorage.getItem("items"));
   }
-  itemsFromLocalStorage.forEach((item) => addItem(item));
+  itemsFromLocalStorage.sort((a, b) => (a.priority > b.priority ? 1 : -1));
+  itemsFromLocalStorage.forEach((item) => addItem(item.name));
 }
 
+//Operations on local storage
 function addItemToLocalStorage(item) {
   let itemsFromLocalStorage;
   if (localStorage.getItem("items") === null) {
@@ -28,15 +31,18 @@ function addItemToLocalStorage(item) {
 }
 
 function removeItemFromLocalStorage(name) {
-  const itemsFromLocalStorage = JSON.parse(localStorage.getItem("items")).filter((item) => item !== name);
+  const itemsFromLocalStorage = JSON.parse(localStorage.getItem("items")).filter(
+    (item) => item.name !== name
+  );
   localStorage.setItem("items", JSON.stringify(itemsFromLocalStorage));
 }
 
 function onSubmitItem(e) {
   e.preventDefault();
   input = itemInput.value;
+  const priority = getValueFromRadioBtns();
   if (isEditMode) {
-    if (!checkIfUnique(input)) {
+    if (!CheckIfOccupied(input) || itemList.querySelector(".item-edit").textContent == input) {
       const itemToEdit = itemList.querySelector(".item-edit");
       removeItemFromLocalStorage(itemToEdit.textContent);
       itemToEdit.remove();
@@ -47,20 +53,23 @@ function onSubmitItem(e) {
       return;
     }
   } else {
-    if (checkIfUnique(input)) {
+    if (CheckIfOccupied(input)) {
       alert("This item is already in list");
       itemInput.value = "";
       return;
     }
   }
   if (input != "") {
-    addItemToLocalStorage(input);
+    addItemToLocalStorage({
+      name: input,
+      priority: priority,
+    });
     addItem(input);
     itemInput.value = "";
     checkUI();
   }
 }
-
+//Operations on items
 function addItem(name) {
   const li = document.createElement("li");
   li.appendChild(document.createTextNode(name));
@@ -70,16 +79,13 @@ function addItem(name) {
   itemList.appendChild(li);
 }
 
-function createBtn(classes) {
-  btn = document.createElement("button");
-  btn.className = classes;
-  return btn;
-}
-
-function createIcon(classes) {
-  icon = document.createElement("i");
-  icon.className = classes;
-  return icon;
+function editItem(item) {
+  isEditMode = true;
+  itemList.querySelectorAll("li").forEach((item) => item.classList.remove("item-edit"));
+  item.classList.add("item-edit");
+  submitButton.innerHTML = '<i class="fa-solid fa-pen"></i>Edit';
+  submitButton.classList.add("btn-edit-mode");
+  itemInput.value = item.textContent;
 }
 
 function deleteItem(e) {
@@ -91,16 +97,6 @@ function deleteItem(e) {
     }
   } else {
     editItem(e.target);
-  }
-}
-
-function clearAll() {
-  if (confirm("Are you sure you want to delete all items?")) {
-    while (itemList.firstChild) {
-      itemList.firstChild.remove();
-    }
-    localStorage.removeItem("items");
-    checkUI();
   }
 }
 
@@ -116,20 +112,6 @@ function filterItems(e) {
   });
 }
 
-function checkIfUnique(item) {
-  const items = JSON.parse(localStorage.getItem("items"));
-  return items ? items.includes(item) : false;
-}
-
-function editItem(item) {
-  isEditMode = true;
-  itemList.querySelectorAll("li").forEach((item) => item.classList.remove("item-edit"));
-  item.classList.add("item-edit");
-  submitButton.innerHTML = '<i class="fa-solid fa-pen"></i>Edit';
-  submitButton.classList.add("btn-edit-mode");
-  itemInput.value = item.textContent;
-}
-
 function checkUI() {
   const items = itemList.querySelectorAll("li");
   if (items.length === 0) {
@@ -142,7 +124,56 @@ function checkUI() {
   isEditMode = false;
   submitButton.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
   submitButton.classList.remove("btn-edit-mode");
-  itemList.querySelectorAll("li").forEach((item) => item.classList.remove("item-edit"));
+  while (itemList.firstChild) {
+    itemList.firstChild.remove();
+  }
+  renderItems();
+  const radioBtns = document.getElementsByName("priority");
+  for (btn of radioBtns) {
+    if (btn.id == "prio-1") {
+      btn.checked = true;
+    } else {
+      btn.checked = false;
+    }
+  }
+}
+
+//Helpers
+function clearAll() {
+  if (confirm("Are you sure you want to delete all items?")) {
+    while (itemList.firstChild) {
+      itemList.firstChild.remove();
+    }
+    localStorage.removeItem("items");
+    checkUI();
+  }
+}
+
+function CheckIfOccupied(item) {
+  const items = JSON.parse(localStorage.getItem("items"));
+  return items ? items.includes(item) : false;
+}
+
+function getValueFromRadioBtns() {
+  const radioBtns = document.getElementsByName("priority");
+  for (btn of radioBtns) {
+    if (btn.checked) {
+      return btn.value;
+    }
+  }
+  return null;
+}
+//Create elements section
+function createBtn(classes) {
+  btn = document.createElement("button");
+  btn.className = classes;
+  return btn;
+}
+
+function createIcon(classes) {
+  icon = document.createElement("i");
+  icon.className = classes;
+  return icon;
 }
 
 itemForm.addEventListener("submit", onSubmitItem);

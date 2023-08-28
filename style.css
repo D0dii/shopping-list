@@ -133,6 +133,54 @@ header h1 {
   color: #3be4f0;
 }
 
+.radio-wrapper {
+  margin: 0.5rem 0;
+}
+
+input[type="radio"] {
+  opacity: 0;
+
+  + label {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+
+    &::before {
+      content: "";
+      display: inline-block;
+      position: absolute;
+      left: -24px;
+      border-radius: 50%;
+      border: 1px solid #6f686a;
+      width: 16px;
+      height: 16px;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      display: inline-block;
+      left: -21px;
+      top: 3.5px;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  &:checked {
+    + label::after {
+      background: blue;
+    }
+  }
+
+  &:focus {
+    + label::before {
+      box-shadow: 0 0px 8px blue;
+    }
+  }
+}
+
 @media (max-width: 500px) {
   .items li {
     width: 100%;
