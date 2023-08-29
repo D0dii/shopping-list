@@ -14,8 +14,8 @@ function renderItems() {
   } else {
     itemsFromLocalStorage = JSON.parse(localStorage.getItem("items"));
   }
-  itemsFromLocalStorage.sort((a, b) => (a.priority > b.priority ? 1 : -1));
-  itemsFromLocalStorage.forEach((item) => addItem(item.name));
+  itemsFromLocalStorage.sort((a, b) => (a.priority > b.priority ? -1 : 1));
+  itemsFromLocalStorage.forEach((item) => addItem(item.name, item.priority));
 }
 
 //Operations on local storage
@@ -64,15 +64,16 @@ function onSubmitItem(e) {
       name: input,
       priority: priority,
     });
-    addItem(input);
+    addItem(input, priority);
     itemInput.value = "";
     checkUI();
   }
 }
 //Operations on items
-function addItem(name) {
+function addItem(name, priority) {
   const li = document.createElement("li");
   li.appendChild(document.createTextNode(name));
+  li.appendChild(createIcon("fa-solid fa-" + priority));
   const btn = createBtn("remove-item btn-link text-red");
   btn.appendChild(createIcon("fa-solid fa-xmark"));
   li.appendChild(btn);
@@ -149,9 +150,17 @@ function clearAll() {
   }
 }
 
-function CheckIfOccupied(item) {
+function CheckIfOccupied(input) {
   const items = JSON.parse(localStorage.getItem("items"));
-  return items ? items.includes(item) : false;
+  if (!items) {
+    return false;
+  }
+  for (var item of items) {
+    if (item.name === input) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getValueFromRadioBtns() {
